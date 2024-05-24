@@ -1,0 +1,6 @@
+instruction_dir: /path/to/instructions
+firesting_port: "/dev/tty.usbserial-DA68UH8B"
+lamp_port: "COM4"
+sleep_time: 1
+log_dir: /path/to/logs
+chemspeed_working_dir: /path/to/chemspeed

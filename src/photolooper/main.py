@@ -6,6 +6,7 @@ import pandas as pd
 from pathlib import Path
 from typing import Union
 import os
+import yaml
 
 
 class Command(enum.Enum):
@@ -70,39 +71,66 @@ def seed_status_and_command_files(working_directory: Union[str, Path] = "."):
         handle.write("FIRESTING-STOP")
 
 
-firesting_port = "/dev/tty.usbserial-DA68UH8B"
-lamp_port = "COM4"
-sleep_time = 1
-working_directory = Path(__file__).parent
+def read_yaml(yaml_file: Union[str, Path]) -> list:
+    with open(yaml_file, "r") as handle:
+        return yaml.safe_load(handle)
+
+
+def write_instruction_csv(config: dict, instruction_dir: Union[str, Path] = "."):
+    column_order = [
+        "name",
+        "voltage",
+        "volume_water",
+        "volume_sacrificial_oxidant",
+        "volume_ruthenium_solution",
+        "volume_buffer_solution_1",
+        "volume_buffer_solution_2",
+        "degassing_time",
+        "measurement_time",
+        "run",
+    ]
+    df = pd.DataFrame([config])
+    df = df[column_order]
+    df.to_csv(os.path.join(instruction_dir, "values_for_experiment.csv"), index=False)
 
 
 def main():
-    results = []
-    switch_off(lamp_port)
-    while True:
-        command = obtain_command(working_directory=working_directory)
-        status = obtain_status(working_directory=working_directory)
+    global_configs = read_yaml(os.path.join("..", "..", "setup.yaml"))
+    configs = read_yaml(
+        os.path.join("..", "..", "configs.yaml"), global_configs["instruction_dir"]
+    )
+    for config in configs:
+        write_instruction_csv(config, global_configs["instruction_dir"])
+        results = []
+        switch_off(global_configs["lamp_port"])
+        while True:
+            command = obtain_command(
+                working_directory=global_configs["chemspeed_working_dir"]
+            )
+            status = obtain_status(
+                working_directory=global_configs["chemspeed_working_dir"]
+            )
 
-        if command == Command.lamp_off:
-            switch_off(lamp_port)
+            if command == Command.lamp_off:
+                switch_off(global_configs["lamp_port"])
 
-        if command == Command.lamp_on:
-            switch_on(lamp_port)
+            if command == Command.lamp_on:
+                switch_on(global_configs["lamp_port"], config["voltage"])
 
-        if command == Command.firesting_start:
-            firesting_results = measure_firesting(firesting_port)
-        else:
-            firesting_results = {}
+            if command == Command.firesting_start:
+                firesting_results = measure_firesting(global_configs["firesting_port"])
+            else:
+                firesting_results = {}
 
-        firesting_results["timestamp"] = time.time()
-        firesting_results["status"] = status.value
-        firesting_results["command"] = command.value
-        results.append(firesting_results)
+            firesting_results["timestamp"] = time.time()
+            firesting_results["status"] = status.value
+            firesting_results["command"] = command.value
+            results.append(firesting_results)
 
-        df = pd.DataFrame(results)
-        df.to_csv("results.csv", index=False)
+            df = pd.DataFrame(results)
+            df.to_csv("results.csv", index=False)
 
-        time.sleep(sleep_time)
+            time.sleep(global_configs["sleep_time"])
 
 
 if __name__ == "__main__":
