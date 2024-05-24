@@ -1,27 +1,12 @@
-import enum
 import time
-from powersupply import switch_off, switch_on
-from firesting import measure_firesting
+from photolooper.powersupply import switch_off, switch_on
+from photolooper.firesting import measure_firesting
 import pandas as pd
 from pathlib import Path
 from typing import Union
 import os
 import yaml
-
-
-class Command(enum.Enum):
-    firesting_start = "FIRESTING-START"
-    firesting_stop = "FIRESTING-STOP"
-    measure = "MEASURE"
-    lamp_on = "LAMP-ON"
-    lamp_off = "LAMP-OFF"
-
-
-class Status(enum.Enum):
-    degassing = "DEGASSING"
-    prereaction_baseline = "PREREACTION-BASELINE"
-    reaction = "REACTION"
-    postreaction_baseline = "POSTREACTION-BASELINE"
+from photolooper.status import Command, Status
 
 
 def obtain_status(working_directory: Union[str, Path] = "."):
@@ -94,10 +79,10 @@ def write_instruction_csv(config: dict, instruction_dir: Union[str, Path] = ".")
     df.to_csv(os.path.join(instruction_dir, "values_for_experiment.csv"), index=False)
 
 
-def main():
-    global_configs = read_yaml(os.path.join("..", "..", "setup.yaml"))
+def main(config_dir: Union[str, Path] = "."):
+    global_configs = read_yaml(os.path.join(config_dir, "setup.yaml"))
     configs = read_yaml(
-        os.path.join("..", "..", "configs.yaml"), global_configs["instruction_dir"]
+        os.path.join(config_dir, "configs.yaml"), global_configs["instruction_dir"]
     )
     for config in configs:
         write_instruction_csv(config, global_configs["instruction_dir"])
@@ -131,7 +116,3 @@ def main():
             df.to_csv("results.csv", index=False)
 
             time.sleep(global_configs["sleep_time"])
-
-
-if __name__ == "__main__":
-    main()
