@@ -1,7 +1,7 @@
 instruction_dir: /path/to/instructions
 firesting_port: 
   port: "COM8"
-  name: "USB Serial Port"
+  name: null
 lamp_port: 
   port: "COM4"
   name: "USB-SERIAL CH340"
