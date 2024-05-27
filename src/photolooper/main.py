@@ -1,12 +1,14 @@
 import time
 from photolooper.powersupply import switch_off, switch_on
 from photolooper.firesting import measure_firesting
+from photolooper.utils import check_com_port
 import pandas as pd
 from pathlib import Path
 from typing import Union
 import os
 import yaml
 from photolooper.status import Command, Status
+import termplotlib as tpl
 
 
 def obtain_status(working_directory: Union[str, Path] = "."):
@@ -47,6 +49,9 @@ def obtain_command(working_directory: Union[str, Path] = "."):
     if "LAMP-OFF" in content:
         return Command.lamp_off
 
+    if "FIRESTING-END" in content:
+        return Command.firesting_end
+
     return Command.other
 
 
@@ -81,9 +86,7 @@ def write_instruction_csv(config: dict, instruction_dir: Union[str, Path] = ".")
     )
 
 
-# ToDo: log uM_1 and optical_temperature_2
 # ToDo: add com port check
-# ToDo: add experiment stop status -> break while loop
 def main(config_dir: Union[str, Path] = "."):
     global_configs = read_yaml(os.path.join(config_dir, "setup.yml"))
     global_configs["chemspeed_working_dir"] = os.path.normpath(
@@ -93,6 +96,13 @@ def main(config_dir: Union[str, Path] = "."):
         global_configs["instruction_dir"]
     )
     configs = read_yaml(os.path.join(config_dir, "experiments.yml"))
+
+    if not check_com_port(global_configs["firesting_port"]):
+        raise Exception("Firesting port not found")
+
+    if not check_com_port(global_configs["lamp_port"]):
+        raise Exception("Lamp port not found")
+
     switch_off(global_configs["lamp_port"])
     seed_status_and_command_files(global_configs["instruction_dir"])
     for config in configs:
@@ -108,6 +118,9 @@ def main(config_dir: Union[str, Path] = "."):
                 working_directory=global_configs["chemspeed_working_dir"]
             )
 
+            if command == Command.firesting_end:
+                break
+
             if command == Command.lamp_off:
                 switch_off(global_configs["lamp_port"])
 
@@ -116,6 +129,16 @@ def main(config_dir: Union[str, Path] = "."):
 
             if command != Command.firesting_stop:
                 firesting_results = measure_firesting(global_configs["firesting_port"])
+                print(
+                    f"uO2: {firesting_results['uM_1']} optical temperature: {firesting_results['optical_temperature_2']}"
+                )
+                fig = tpl.figure()
+                fig.plot(
+                    firesting_results["uM_1"],
+                    firesting_results["optical_temperature_2"],
+                )
+                fig.show()
+
             else:
                 firesting_results = {}
 

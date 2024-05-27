@@ -33,5 +33,9 @@ def serial_ports():
     return result
 
 
+def check_com_port(port: str) -> bool:
+    return port in serial_ports()
+
+
 if __name__ == "__main__":
     print(serial_ports())
