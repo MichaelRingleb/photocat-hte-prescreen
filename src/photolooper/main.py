@@ -87,7 +87,6 @@ def write_instruction_csv(config: dict, instruction_dir: Union[str, Path] = ".")
     )
 
 
-# ToDo: add com port check
 def main(config_dir: Union[str, Path] = "."):
     global_configs = read_yaml(os.path.join(config_dir, "setup.yml"))
     global_configs["chemspeed_working_dir"] = os.path.normpath(
@@ -153,6 +152,11 @@ def main(config_dir: Union[str, Path] = "."):
             results.append(firesting_results)
 
             df = pd.DataFrame(results)
-            df.to_csv(f"results_{config['name']}.csv", index=False)
+            df.to_csv(
+                os.path.join(
+                    global_configs["log_dir"], f"results_{config['name']}.csv"
+                ),
+                index=False,
+            )
 
             time.sleep(global_configs["sleep_time"])
