@@ -10,7 +10,7 @@ from photolooper.status import Command, Status
 
 
 def obtain_status(working_directory: Union[str, Path] = "."):
-    with open(os.path.join(working_directory, "status.csv"), "r") as handle:
+    with open(os.path.join(working_directory, "firesting_status.csv"), "r") as handle:
         content = handle.read()
 
     if "DEGASSING" in content:
@@ -19,11 +19,13 @@ def obtain_status(working_directory: Union[str, Path] = "."):
     if "PREREACTION-BASELINE" in content:
         return Status.prereaction_baseline
 
+    if "POSTREACTION-BASELINE" in content:
+        return Status.postreaction_baseline
+
     if "REACTION" in content:
         return Status.reaction
 
-    if "POSTREACTION-BASELINE" in content:
-        return Status.postreaction_baseline
+    return Status.other
 
 
 def obtain_command(working_directory: Union[str, Path] = "."):
@@ -45,11 +47,11 @@ def obtain_command(working_directory: Union[str, Path] = "."):
     if "LAMP-OFF" in content:
         return Command.lamp_off
 
-    return None
+    return Command.other
 
 
 def seed_status_and_command_files(working_directory: Union[str, Path] = "."):
-    with open(os.path.join(working_directory, "status.csv"), "w") as handle:
+    with open(os.path.join(working_directory, "firesting_status.csv"), "w") as handle:
         handle.write("Start")
 
     with open(os.path.join(working_directory, "command.csv"), "w") as handle:
@@ -63,8 +65,7 @@ def read_yaml(yaml_file: Union[str, Path]) -> list:
 
 def write_instruction_csv(config: dict, instruction_dir: Union[str, Path] = "."):
     column_order = [
-        "name",
-        "voltage",
+        "run",
         "volume_water",
         "volume_sacrificial_oxidant",
         "volume_ruthenium_solution",
@@ -72,19 +73,30 @@ def write_instruction_csv(config: dict, instruction_dir: Union[str, Path] = ".")
         "volume_buffer_solution_2",
         "degassing_time",
         "measurement_time",
-        "run",
     ]
     df = pd.DataFrame([config])
     df = df[column_order]
-    df.to_csv(os.path.join(instruction_dir, "values_for_experiment.csv"), index=False)
-
-
-def main(config_dir: Union[str, Path] = "."):
-    global_configs = read_yaml(os.path.join(config_dir, "setup.yaml"))
-    configs = read_yaml(
-        os.path.join(config_dir, "configs.yaml"), global_configs["instruction_dir"]
+    df.to_csv(
+        os.path.join(instruction_dir, "values_for_experiment.csv"), index=False, sep=","
     )
+
+
+# ToDo: log uM_1 and optical_temperature_2
+# ToDo: add com port check
+# ToDo: add experiment stop status -> break while loop
+def main(config_dir: Union[str, Path] = "."):
+    global_configs = read_yaml(os.path.join(config_dir, "setup.yml"))
+    global_configs["chemspeed_working_dir"] = os.path.normpath(
+        global_configs["chemspeed_working_dir"]
+    )
+    global_configs["instruction_dir"] = os.path.normpath(
+        global_configs["instruction_dir"]
+    )
+    configs = read_yaml(os.path.join(config_dir, "experiments.yml"))
+    switch_off(global_configs["lamp_port"])
+    seed_status_and_command_files(global_configs["instruction_dir"])
     for config in configs:
+        print("Working on ", config)
         write_instruction_csv(config, global_configs["instruction_dir"])
         results = []
         switch_off(global_configs["lamp_port"])
@@ -102,7 +114,7 @@ def main(config_dir: Union[str, Path] = "."):
             if command == Command.lamp_on:
                 switch_on(global_configs["lamp_port"], config["voltage"])
 
-            if command == Command.firesting_start:
+            if command != Command.firesting_stop:
                 firesting_results = measure_firesting(global_configs["firesting_port"])
             else:
                 firesting_results = {}
@@ -113,6 +125,6 @@ def main(config_dir: Union[str, Path] = "."):
             results.append(firesting_results)
 
             df = pd.DataFrame(results)
-            df.to_csv("results.csv", index=False)
+            df.to_csv(f"results_{config['name']}.csv", index=False)
 
             time.sleep(global_configs["sleep_time"])

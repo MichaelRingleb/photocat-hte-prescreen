@@ -7,6 +7,7 @@ class Command(enum.Enum):
     measure = "MEASURE"
     lamp_on = "LAMP-ON"
     lamp_off = "LAMP-OFF"
+    other = "OTHER"
 
 
 class Status(enum.Enum):
@@ -14,3 +15,4 @@ class Status(enum.Enum):
     prereaction_baseline = "PREREACTION-BASELINE"
     reaction = "REACTION"
     postreaction_baseline = "POSTREACTION-BASELINE"
+    other = "OTHER"
