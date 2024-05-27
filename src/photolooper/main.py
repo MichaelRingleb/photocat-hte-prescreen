@@ -8,7 +8,8 @@ from typing import Union
 import os
 import yaml
 from photolooper.status import Command, Status
-import termplotlib as tpl
+
+# import termplotlib as tpl
 
 
 def obtain_status(working_directory: Union[str, Path] = "."):
@@ -97,10 +98,14 @@ def main(config_dir: Union[str, Path] = "."):
     )
     configs = read_yaml(os.path.join(config_dir, "experiments.yml"))
 
-    if not check_com_port(global_configs["firesting_port"]):
+    if not check_com_port(
+        global_configs["firesting_port"].port, global_configs["firesting_port"].name
+    ):
         raise Exception("Firesting port not found")
 
-    if not check_com_port(global_configs["lamp_port"]):
+    if not check_com_port(
+        global_configs["lamp_port"].port, global_configs["lamp_port"].name
+    ):
         raise Exception("Lamp port not found")
 
     switch_off(global_configs["lamp_port"])
@@ -132,12 +137,12 @@ def main(config_dir: Union[str, Path] = "."):
                 print(
                     f"uO2: {firesting_results['uM_1']} optical temperature: {firesting_results['optical_temperature_2']}"
                 )
-                fig = tpl.figure()
-                fig.plot(
-                    firesting_results["uM_1"],
-                    firesting_results["optical_temperature_2"],
-                )
-                fig.show()
+                # fig = tpl.figure()
+                # fig.plot(
+                #     firesting_results["uM_1"],
+                #     firesting_results["optical_temperature_2"],
+                # )
+                # fig.show()
 
             else:
                 firesting_results = {}

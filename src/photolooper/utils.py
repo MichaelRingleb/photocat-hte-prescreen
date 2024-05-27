@@ -1,6 +1,7 @@
 import sys
 import glob
 import serial
+import serial.tools.list_ports
 
 
 def serial_ports():
@@ -33,8 +34,16 @@ def serial_ports():
     return result
 
 
-def check_com_port(port: str) -> bool:
-    return port in serial_ports()
+def check_com_port(port: str, name: str) -> bool:
+    # the name is the port description that might be none
+    # if not none, use it to double check if this matches
+    # the port we are looking for
+    ports = serial.tools.list_ports.comports()
+    for p in ports:
+        if p.device == port:
+            if name is None or name in p.description:
+                return True
+    return False
 
 
 if __name__ == "__main__":
