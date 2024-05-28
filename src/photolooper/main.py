@@ -97,20 +97,34 @@ def main(global_config_path, experiment_config_path):
 
     firestring_port = find_com_port(global_configs["firesting_port"]["name"])
     if firestring_port is None:
-        raise Exception("Firesting port not found")
+        raise Exception("💣 Firesting port not found")
 
     global_configs["firesting_port"]["port"] = firestring_port
 
     lamp_port = find_com_port(global_configs["lamp_port"]["name"])
     if lamp_port is None:
-        raise Exception("Lamp port not found")
+        raise Exception("💣 Lamp port not found")
 
     global_configs["lamp_port"]["port"] = lamp_port
 
     switch_off(global_configs["lamp_port"]["port"])
     seed_status_and_command_files(global_configs["instruction_dir"])
     for config in configs:
-        print("Working on ", config)
+        print("🧪 Working on ", config)
+
+        # if the results file already exists, warn user and add incrementing number to run name
+        if os.path.exists(
+            os.path.join(
+                global_configs["instruction_dir"], f"results_{config['run']}.csv"
+            )
+        ):
+            print(
+                f"🚧 Results file for {config['run']} already exists. Adding number to run name"
+            )
+            config["run"] = config["run"] + str(
+                len(os.listdir(global_configs["instruction_dir"])) + 1
+            )
+
         write_instruction_csv(config, global_configs["instruction_dir"])
         results = []
         switch_off(global_configs["lamp_port"]["port"])
@@ -149,6 +163,7 @@ def main(global_config_path, experiment_config_path):
                 firesting_results = {}
 
             firesting_results["timestamp"] = time.time()
+            firesting_results["datetime"] = time.strftime("%Y-%m-%d %H:%M:%S")
             firesting_results["status"] = status.value
             firesting_results["command"] = command.value
             results.append(firesting_results)
@@ -157,6 +172,14 @@ def main(global_config_path, experiment_config_path):
             df.to_csv(
                 os.path.join(
                     global_configs["log_dir"], f"results_{config['name']}.csv"
+                ),
+                index=False,
+            )
+
+            df[["datetime", "uM_1", "optical_temperature_2", "status"]].to_csv(
+                os.path.join(
+                    global_configs["instruction_dir"],
+                    f"results_summarized_{config['run']}.csv",
                 ),
                 index=False,
             )
