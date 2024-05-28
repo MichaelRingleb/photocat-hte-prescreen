@@ -22,8 +22,8 @@ The meaning of the parameters is:
 - `volume_water`: the volume of water in `mL`
 - `volume_sacrificial_oxidant`: the volume of sacrificial oxidant in `mL` 
 - `volume_ruthenium_solution`: the volume of the solution containing the [Ru(bpy)3]Cl2 complex in `mL`
-- `volume_buffer_solution_1`: the volume of the  in `mL`
-- `volume_buffer_solution_2`: the volume of the  in `mL`
+- `volume_buffer_solution_1`: the volume of the sodium carbonate solution  in `mL`
+- `volume_buffer_solution_2`: the volume of the sodium bicarbonate solution  in `mL`
 - `degassing_time`: time for degassing of the reaction solution prior to irradiation in `min`
 - `measurement_time`: time for measurement of the reaction while irradiated in `min`
 - `run` : determiner if the experiment defined by the values above is run (run : true) or not (run : false) --> utilized to set a break in the code to make it possible to change the lid of the vial after three performed reactions
