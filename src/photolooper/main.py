@@ -9,6 +9,7 @@ import os
 import yaml
 from photolooper.status import Command, Status
 import warnings
+import matplotlib.pyplot as plt
 
 warnings.filterwarnings(
     "ignore", message="*baud-rate*"
@@ -201,12 +202,19 @@ def main(global_config_path, experiment_config_path):
                 print(
                     f"uO2: {firesting_results['uM_1']} optical temperature: {firesting_results['optical_temperature_2']}"
                 )
-                # fig = tpl.figure()
-                # fig.plot(
-                #     firesting_results["uM_1"],
-                #     firesting_results["optical_temperature_2"],
-                # )
-                # fig.show()
+                fig, ax = plt.subplots(2, 1)
+                ax[0].plot(firesting_results["timestamp"], firesting_results["uM_1"])
+                ax[1].plot(
+                    firesting_results["timestamp"],
+                    firesting_results["optical_temperature_2"],
+                )
+                fig.tight_layout()
+                fig.savefig(
+                    os.path.join(
+                        global_configs["log_dir"], f"results_{config['name']}.png"
+                    ),
+                    dpi=400,
+                )
 
             else:
                 firesting_results = {}
