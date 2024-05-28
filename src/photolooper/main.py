@@ -61,6 +61,20 @@ def seed_status_and_command_files(working_directory: Union[str, Path] = "."):
     with open(os.path.join(working_directory, "command.csv"), "w") as handle:
         handle.write("FIRESTING-STOP")
 
+    # write instruction CSV with some numbers, but set the run to "false"
+    config = {
+        "run": "false",
+        "volume_water": 10,
+        "volume_sacrificial_oxidant": 10,
+        "volume_ruthenium_solution": 10,
+        "volume_buffer_solution_1": 10,
+        "volume_buffer_solution_2": 10,
+        "degassing_time": 10,
+        "measurement_time": 10,
+    }
+
+    write_instruction_csv(config, working_directory)
+
 
 def read_yaml(yaml_file: Union[str, Path]) -> list:
     with open(yaml_file, "r") as handle:
