@@ -1,7 +1,7 @@
 import time
 from photolooper.powersupply import switch_off, switch_on
 from photolooper.firesting import measure_firesting
-from photolooper.utils import check_com_port
+from photolooper.utils import find_com_port
 import pandas as pd
 from pathlib import Path
 from typing import Union
@@ -95,23 +95,25 @@ def main(global_config_path, experiment_config_path):
     )
     configs = read_yaml(experiment_config_path)
 
-    if not check_com_port(
-        global_configs["firesting_port"].port, global_configs["firesting_port"].name
-    ):
+    firestring_port = find_com_port(global_configs["firesting_port"]["name"])
+    if firestring_port is None:
         raise Exception("Firesting port not found")
 
-    if not check_com_port(
-        global_configs["lamp_port"].port, global_configs["lamp_port"].name
-    ):
+    global_configs["firesting_port"]["port"] = firestring_port
+
+    lamp_port = find_com_port(global_configs["lamp_port"]["name"])
+    if lamp_port is None:
         raise Exception("Lamp port not found")
 
-    switch_off(global_configs["lamp_port"])
+    global_configs["lamp_port"]["port"] = lamp_port
+
+    switch_off(global_configs["lamp_port"]["port"])
     seed_status_and_command_files(global_configs["instruction_dir"])
     for config in configs:
         print("Working on ", config)
         write_instruction_csv(config, global_configs["instruction_dir"])
         results = []
-        switch_off(global_configs["lamp_port"])
+        switch_off(global_configs["lamp_port"]["port"])
         while True and config["run"] == "true":
             command = obtain_command(
                 working_directory=global_configs["chemspeed_working_dir"]
@@ -124,13 +126,15 @@ def main(global_config_path, experiment_config_path):
                 break
 
             if command == Command.lamp_off:
-                switch_off(global_configs["lamp_port"])
+                switch_off(global_configs["lamp_port"]["port"])
 
             if command == Command.lamp_on:
-                switch_on(global_configs["lamp_port"], config["voltage"])
+                switch_on(global_configs["lamp_port"]["port"], config["voltage"])
 
             if command != Command.firesting_stop:
-                firesting_results = measure_firesting(global_configs["firesting_port"])
+                firesting_results = measure_firesting(
+                    global_configs["firesting_port"]["port"]
+                )
                 print(
                     f"uO2: {firesting_results['uM_1']} optical temperature: {firesting_results['optical_temperature_2']}"
                 )

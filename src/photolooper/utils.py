@@ -46,5 +46,13 @@ def check_com_port(port: str, name: str) -> bool:
     return False
 
 
+def find_com_port(name: str) -> str:
+    ports = serial.tools.list_ports.comports()
+    for p in ports:
+        if name in p.description:
+            return p.device
+    return None
+
+
 if __name__ == "__main__":
     print(serial_ports())
