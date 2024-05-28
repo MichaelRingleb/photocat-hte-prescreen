@@ -9,8 +9,6 @@ import os
 import yaml
 from photolooper.status import Command, Status
 
-# import termplotlib as tpl
-
 
 def obtain_status(working_directory: Union[str, Path] = "."):
     with open(os.path.join(working_directory, "firesting_status.csv"), "r") as handle:
@@ -87,15 +85,15 @@ def write_instruction_csv(config: dict, instruction_dir: Union[str, Path] = ".")
     )
 
 
-def main(config_dir: Union[str, Path] = "."):
-    global_configs = read_yaml(os.path.join(config_dir, "setup.yml"))
+def main(global_config_path, experiment_config_path):
+    global_configs = read_yaml(global_config_path)
     global_configs["chemspeed_working_dir"] = os.path.normpath(
         global_configs["chemspeed_working_dir"]
     )
     global_configs["instruction_dir"] = os.path.normpath(
         global_configs["instruction_dir"]
     )
-    configs = read_yaml(os.path.join(config_dir, "experiments.yml"))
+    configs = read_yaml(experiment_config_path)
 
     if not check_com_port(
         global_configs["firesting_port"].port, global_configs["firesting_port"].name
@@ -114,7 +112,7 @@ def main(config_dir: Union[str, Path] = "."):
         write_instruction_csv(config, global_configs["instruction_dir"])
         results = []
         switch_off(global_configs["lamp_port"])
-        while True:
+        while True and config["run"] == "true":
             command = obtain_command(
                 working_directory=global_configs["chemspeed_working_dir"]
             )
