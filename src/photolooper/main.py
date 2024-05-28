@@ -116,13 +116,13 @@ def main(global_config_path, experiment_config_path):
 
     firestring_port = find_com_port(global_configs["firesting_port"]["name"])
     if firestring_port is None:
-        raise Exception("💣 Firesting port not found")
+        raise Exception("🚨 Firesting port not found")
 
     global_configs["firesting_port"]["port"] = firestring_port
 
     lamp_port = find_com_port(global_configs["lamp_port"]["name"])
     if lamp_port is None:
-        raise Exception("💣 Lamp port not found")
+        raise Exception("🚨 Lamp port not found")
 
     global_configs["lamp_port"]["port"] = lamp_port
 
@@ -204,3 +204,11 @@ def main(global_config_path, experiment_config_path):
             )
 
             time.sleep(global_configs["sleep_time"])
+
+    # cleanup by deleting the values_for_experiment.csv file
+    try:
+        os.remove(
+            os.path.join(global_configs["instruction_dir"], "values_for_experiment.csv")
+        )
+    except FileNotFoundError:
+        print("🚨 values_for_experiment.csv not found when trying to clean up")

@@ -6,7 +6,7 @@
     a. `experiments.yml` defines the experiments 
     b. `setup.yml` defines the setup (firesting, power supply, folders)
 1. Set up experimental setup 
-2. Start AutoSuite Program, ensure that there is no `experiment_description.csv` in the folder that is left over. The AutoSuite program will read that and start from there, even if the Python code is not running. 
+2. Start AutoSuite Program, ensure that there is no `values_for_experiment.csv` in the folder that is left over. The AutoSuite program will read that and start from there, even if the Python code is not running. 
 3. In the `base` Python environment run `python run.py` in the `experiments` folder of this repo
 
 
