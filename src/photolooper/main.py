@@ -82,6 +82,14 @@ def obtain_command(working_directory: Union[str, Path] = "."):
 
 
 def seed_status_and_command_files(working_directory: Union[str, Path] = "."):
+    """
+    Seed the status and command files in the working directory.
+    Also writes an empty values_for_experiment.csv file.
+
+    Args:
+        working_directory (Union[str, Path], optional):
+            The working directory. Defaults to ".".
+    """
     with open(os.path.join(working_directory, "firesting_status.csv"), "w") as handle:
         handle.write("Start")
 
