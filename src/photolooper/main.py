@@ -8,6 +8,11 @@ from typing import Union
 import os
 import yaml
 from photolooper.status import Command, Status
+import warnings
+
+warnings.filterwarnings(
+    "ignore", message="*baud-rate*"
+)  # this is one log too much in the PyroScience codebase
 
 
 def obtain_status(working_directory: Union[str, Path] = "."):
