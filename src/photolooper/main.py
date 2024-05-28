@@ -16,6 +16,17 @@ warnings.filterwarnings(
 
 
 def obtain_status(working_directory: Union[str, Path] = "."):
+    """
+    Obtain the status of the photolooper. This file is written by the
+    AutoSuite program.
+
+    Args:
+        working_directory (Union[str, Path], optional):
+            The working directory. Defaults to ".".
+
+    Returns:
+        Status: The status of the photolooper.
+    """
     with open(os.path.join(working_directory, "firesting_status.csv"), "r") as handle:
         content = handle.read()
 
@@ -35,6 +46,17 @@ def obtain_status(working_directory: Union[str, Path] = "."):
 
 
 def obtain_command(working_directory: Union[str, Path] = "."):
+    """
+    Obtain the command of the photolooper. This file is written by the
+    AutoSuite program.
+
+    Args:
+        working_directory (Union[str, Path], optional):
+            The working directory. Defaults to ".".
+
+    Returns:
+        Command: The command of the photolooper.
+    """
     with open(os.path.join(working_directory, "command.csv"), "r") as handle:
         content = handle.read()
 
