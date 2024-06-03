@@ -156,3 +156,5 @@ def fit_data(data_df, filename=None):
 
     # print rate constant
     print(f"Rate constant k1 (s^-1): {rate_law_fit[1]:.3f}")
+
+    return rate_law_fit[1]

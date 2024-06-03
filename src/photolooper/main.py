@@ -7,6 +7,7 @@ from typing import Union
 import matplotlib.pyplot as plt
 import pandas as pd
 import yaml
+import json
 
 from photolooper.firesting import measure_firesting
 from photolooper.powersupply import switch_off, switch_on
@@ -195,6 +196,7 @@ def main(global_config_path, experiment_config_path):
         write_instruction_csv(config, global_configs["instruction_dir"])
         results = []
         switch_off(global_configs["lamp_port"]["port"])
+        df = None
         while True and config["run"] == "true":
             command = obtain_command(
                 working_directory=global_configs["chemspeed_working_dir"]
@@ -205,6 +207,35 @@ def main(global_config_path, experiment_config_path):
 
             if command == Command.firesting_end:
                 # if the autosuite waits and the python code continues running and reading the firesting_end command, it will continue breaking the executions
+                if df:
+                    rate = fit_data(
+                        df,
+                        os.path.join(
+                            global_configs["log_dir"],
+                            f"fit_{config['name']}.png",
+                        ),
+                    )
+
+                    out_dict = {
+                        "config": config,
+                        "rate": rate,
+                        "datetime": df["datetime"].value.tolist(),
+                        "uM_1": df["uM_1"].value.tolist(),
+                        "optical_temperature_2": df[
+                            "optical_temperature_2"
+                        ].value.tolist(),
+                        "status": df["status"].value.tolist(),
+                    }
+
+                    with open(
+                        os.path.join(
+                            global_configs["log_dir"],
+                            f"results_{config['name']}.json",
+                        ),
+                        "w",
+                    ) as handle:
+                        json.dump(out_dict, handle)
+
                 write_break_command(global_configs["instruction_dir"])
                 write_pause_status(global_configs["instruction_dir"])
                 break
@@ -273,25 +304,6 @@ def main(global_config_path, experiment_config_path):
                     global_configs["log_dir"], f"results_{config['name']}.csv"
                 ),
                 index=False,
-            )
-
-            try:
-                df[["datetime", "uM_1", "optical_temperature_2", "status"]].to_csv(
-                    os.path.join(
-                        global_configs["log_dir"],
-                        f"results_summarized_{config['name']}.csv",
-                    ),
-                    index=False,
-                )
-            except KeyError:  # not measured yet
-                pass
-
-            fit_data(
-                df,
-                os.path.join(
-                    global_configs["log_dir"],
-                    f"fit_{config['name']}.png",
-                ),
             )
 
             time.sleep(global_configs["sleep_time"])
