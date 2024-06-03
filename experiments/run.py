@@ -12,10 +12,10 @@ def parse_args():
     return parser.parse_args()
 
 
-def main():
+def run():
     args = parse_args()
-    main(args.experiment_config, args.global_config)
+    main(args.global_config, args.experiment_config)
 
 
 if __name__ == "__main__":
-    main()
+    run()
