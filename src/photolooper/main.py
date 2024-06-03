@@ -12,7 +12,7 @@ import warnings
 import matplotlib.pyplot as plt
 
 warnings.filterwarnings(
-    "ignore", message="*baud-rate*"
+    "ignore", message=".*baud*."
 )  # this is one log too much in the PyroScience codebase
 
 
@@ -79,6 +79,9 @@ def obtain_command(working_directory: Union[str, Path] = "."):
     if "FIRESTING-END" in content:
         return Command.firesting_end
 
+    if "PAUSE" in content: 
+        return Command.pause
+
     return Command.other
 
 
@@ -111,6 +114,14 @@ def seed_status_and_command_files(working_directory: Union[str, Path] = "."):
 
     write_instruction_csv(config, working_directory)
 
+
+def write_break_command(working_directory):
+    with open(os.path.join(working_directory, "command.csv"), "w") as handle:
+        handle.write("PAUSE")
+
+def write_pause_status(working_directory):
+    with open(os.path.join(working_directory, "firesting_status.csv"), "w") as handle:
+        handle.write("PAUSE")
 
 def read_yaml(yaml_file: Union[str, Path]) -> list:
     with open(yaml_file, "r") as handle:
@@ -146,6 +157,7 @@ def main(global_config_path, experiment_config_path):
     configs = read_yaml(experiment_config_path)
 
     firestring_port = find_com_port(global_configs["firesting_port"]["name"])
+
     if firestring_port is None:
         raise Exception("🚨 Firesting port not found")
 
@@ -165,19 +177,20 @@ def main(global_config_path, experiment_config_path):
         # if the results file already exists, warn user and add incrementing number to run name
         if os.path.exists(
             os.path.join(
-                global_configs["instruction_dir"], f"results_{config['run']}.csv"
+                global_configs["log_dir"], f"results_{config['name']}.csv"
             )
         ):
             print(
-                f"🚧 Results file for {config['run']} already exists. Adding number to run name"
+                f"🚧 Results file for {config['name']} already exists. Adding number to run name"
             )
-            config["run"] = config["run"] + str(
-                len(os.listdir(global_configs["instruction_dir"])) + 1
+            config["name"] = config["name"] + "_" + str(
+                len(os.listdir(global_configs["log_dir"])) + 1
             )
 
         write_instruction_csv(config, global_configs["instruction_dir"])
         results = []
         switch_off(global_configs["lamp_port"]["port"])
+        steps = 0
         while True and config["run"] == "true":
             command = obtain_command(
                 working_directory=global_configs["chemspeed_working_dir"]
@@ -187,6 +200,9 @@ def main(global_config_path, experiment_config_path):
             )
 
             if command == Command.firesting_end:
+                # if the autosuite waits and the python code continues running and reading the firesting_end command, it will continue breaking the executions
+                write_break_command( global_configs["instruction_dir"])
+                write_pause_status( global_configs["instruction_dir"])
                 break
 
             if command == Command.lamp_off:
@@ -195,26 +211,14 @@ def main(global_config_path, experiment_config_path):
             if command == Command.lamp_on:
                 switch_on(global_configs["lamp_port"]["port"], config["voltage"])
 
-            if command != Command.firesting_stop:
+            if command not in set([Command.firesting_stop, Command.firesting_end, Command.pause]):
                 firesting_results = measure_firesting(
                     global_configs["firesting_port"]["port"]
                 )
                 print(
                     f"uO2: {firesting_results['uM_1']} optical temperature: {firesting_results['optical_temperature_2']}"
                 )
-                fig, ax = plt.subplots(2, 1)
-                ax[0].plot(firesting_results["timestamp"], firesting_results["uM_1"])
-                ax[1].plot(
-                    firesting_results["timestamp"],
-                    firesting_results["optical_temperature_2"],
-                )
-                fig.tight_layout()
-                fig.savefig(
-                    os.path.join(
-                        global_configs["log_dir"], f"results_{config['name']}.png"
-                    ),
-                    dpi=400,
-                )
+               
 
             else:
                 firesting_results = {}
@@ -225,7 +229,40 @@ def main(global_config_path, experiment_config_path):
             firesting_results["command"] = command.value
             results.append(firesting_results)
 
+     
+
             df = pd.DataFrame(results)
+         
+            df['duration'] = df['timestamp'] - df['timestamp'].iloc[0]
+            if len(df) > 1:
+                df['switch'] = [False, False] + [df['status'].values[i-1] != df['status'].values[i] for i in range(1,len(df)-1)]
+                switch_times = df[df['switch']]['duration']
+            else: 
+                switch_times = []
+            # df['duration'] = df['duration'].astype('timedelta64[min]')
+            if  command not in set([Command.firesting_stop, Command.firesting_end, Command.pause]):
+                fig, ax = plt.subplots(2, 1)
+                ax[0].plot(df["duration"], df["uM_1"], '-o')
+                ax[1].plot(
+                    df["duration"],
+                    df["optical_temperature_2"],  '-o'
+                )
+
+                for switch_time in switch_times:
+                    ax[0].axvline(switch_time)
+                    ax[1].axvline(switch_time)
+
+                ax[1].set_xlabel('time / s')
+                ax[0].set_ylabel('O2 / uM')
+                ax[1].set_ylabel('T / C')
+                fig.tight_layout()
+                fig.savefig(
+                    os.path.join(
+                        global_configs["log_dir"], f"results_{config['name']}.png"
+                    ),
+                    dpi=400,
+                )
+                fig.autofmt_xdate()
             df.to_csv(
                 os.path.join(
                     global_configs["log_dir"], f"results_{config['name']}.csv"
@@ -233,20 +270,17 @@ def main(global_config_path, experiment_config_path):
                 index=False,
             )
 
-            df[["datetime", "uM_1", "optical_temperature_2", "status"]].to_csv(
-                os.path.join(
-                    global_configs["instruction_dir"],
-                    f"results_summarized_{config['run']}.csv",
-                ),
-                index=False,
-            )
+            try:
+                df[["datetime", "uM_1", "optical_temperature_2", "status"]].to_csv(
+                    os.path.join(
+                        global_configs["log_dir"],
+                        f"results_summarized_{config['name']}.csv",
+                    ),
+                    index=False,
+                )
+            except KeyError as e: # not measured yet
+                pass
 
             time.sleep(global_configs["sleep_time"])
 
-    # cleanup by deleting the values_for_experiment.csv file
-    try:
-        os.remove(
-            os.path.join(global_configs["instruction_dir"], "values_for_experiment.csv")
-        )
-    except FileNotFoundError:
-        print("🚨 values_for_experiment.csv not found when trying to clean up")
+

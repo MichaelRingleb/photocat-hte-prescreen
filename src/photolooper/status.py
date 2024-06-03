@@ -9,6 +9,7 @@ class Command(enum.Enum):
     lamp_off = "LAMP-OFF"
     other = "OTHER"
     firesting_end = "FIRESTING-END"
+    pause = "PAUSE"
 
 
 class Status(enum.Enum):
