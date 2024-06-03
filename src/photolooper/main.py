@@ -1,6 +1,5 @@
 import os
 import time
-import warnings
 from pathlib import Path
 from typing import Union
 
@@ -14,11 +13,6 @@ from photolooper.powersupply import switch_off, switch_on
 from photolooper.status import Command, Status
 from photolooper.utils import find_com_port
 from photolooper.fit import fit_data
-
-warnings.filterwarnings(
-    "ignore", message=".*baud*."
-)  # this is one log too much in the PyroScience codebase
-
 
 def obtain_status(working_directory: Union[str, Path] = "."):
     """
@@ -207,7 +201,7 @@ def main(global_config_path, experiment_config_path):
 
             if command == Command.firesting_end:
                 # if the autosuite waits and the python code continues running and reading the firesting_end command, it will continue breaking the executions
-                if df:
+                if df is not None:
                     rate = fit_data(
                         df,
                         os.path.join(
@@ -219,12 +213,12 @@ def main(global_config_path, experiment_config_path):
                     out_dict = {
                         "config": config,
                         "rate": rate,
-                        "datetime": df["datetime"].value.tolist(),
-                        "uM_1": df["uM_1"].value.tolist(),
+                        "datetime": df["datetime"].to_list(),
+                        "uM_1": df["uM_1"].to_list(),
                         "optical_temperature_2": df[
                             "optical_temperature_2"
-                        ].value.tolist(),
-                        "status": df["status"].value.tolist(),
+                        ].to_list(),
+                        "status": df["status"].to_list(),
                     }
 
                     with open(
@@ -299,6 +293,7 @@ def main(global_config_path, experiment_config_path):
                     dpi=400,
                 )
                 fig.autofmt_xdate()
+                plt.close()
             df.to_csv(
                 os.path.join(
                     global_configs["log_dir"], f"results_{config['name']}.csv"

@@ -1,5 +1,4 @@
 from photolooper.main import main
-import os
 import argparse
 
 
