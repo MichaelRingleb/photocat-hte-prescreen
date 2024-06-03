@@ -55,3 +55,8 @@ An example file looks like
   measurement_time: 10 
   run: false 
 ```
+
+
+### `setup.yml`
+
+The `setup.yml` defines global settings such as directories for logging as well as ports for lamp and sensor.
