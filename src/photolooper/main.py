@@ -283,7 +283,7 @@ def main(global_config_path, experiment_config_path):
                     ax[1].axvline(switch_time)
 
                 ax[1].set_xlabel("time / s")
-                ax[0].set_ylabel("O2 / uM")
+                ax[0].set_ylabel("O2 / uM/L")
                 ax[1].set_ylabel("T / C")
                 fig.tight_layout()
                 fig.savefig(
