@@ -159,7 +159,11 @@ def degassing_check(df, chemspeed_working_dir, start=0, end=50, threshold=10):
     end_o2 = df_degas["uM_1"].values[end]
 
     status = start_o2 - end_o2 > threshold
-
+    if status:
+        status = "true"
+    else:
+        status = "false"
+        
     df_status = pd.DataFrame([{"status": status}])
     df_status.to_csv(
         os.path.join(chemspeed_working_dir, "degassing_ok.csv"), index=False, sep=","
