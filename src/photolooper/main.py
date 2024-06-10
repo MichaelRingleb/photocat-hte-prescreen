@@ -14,6 +14,7 @@ from photolooper.status import Command, Status
 from photolooper.utils import find_com_port
 from photolooper.fit import fit_data
 
+
 def obtain_status(working_directory: Union[str, Path] = "."):
     """
     Obtain the status of the photolooper. This file is written by the
@@ -108,6 +109,8 @@ def seed_status_and_command_files(working_directory: Union[str, Path] = "."):
         "volume_buffer_solution_2": 10,
         "degassing_time": 10,
         "measurement_time": 10,
+        "pre_reaction_baseline_time": 15,
+        "post_reaction_baseline_time": 5,
     }
 
     write_instruction_csv(config, working_directory)
@@ -138,6 +141,8 @@ def write_instruction_csv(config: dict, instruction_dir: Union[str, Path] = ".")
         "volume_buffer_solution_2",
         "degassing_time",
         "measurement_time",
+        "pre_reaction_baseline_time",
+        "post_reaction_baseline_time",
     ]
     df = pd.DataFrame([config])
     df = df[column_order]
@@ -215,9 +220,7 @@ def main(global_config_path, experiment_config_path):
                         "rate": rate,
                         "datetime": df["datetime"].to_list(),
                         "uM_1": df["uM_1"].to_list(),
-                        "optical_temperature_2": df[
-                            "optical_temperature_2"
-                        ].to_list(),
+                        "optical_temperature_2": df["optical_temperature_2"].to_list(),
                         "status": df["status"].to_list(),
                     }
 
