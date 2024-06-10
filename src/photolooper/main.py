@@ -14,6 +14,7 @@ from photolooper.status import Command, Status
 from photolooper.utils import find_com_port
 from photolooper.fit import fit_data
 
+
 def obtain_status(working_directory: Union[str, Path] = "."):
     """
     Obtain the status of the photolooper. This file is written by the
@@ -108,6 +109,8 @@ def seed_status_and_command_files(working_directory: Union[str, Path] = "."):
         "volume_buffer_solution_2": 10,
         "degassing_time": 10,
         "measurement_time": 10,
+        "pre_reaction_baseline_time": 15,
+        "post_reaction_baseline_time": 5,
     }
 
     write_instruction_csv(config, working_directory)
@@ -138,12 +141,31 @@ def write_instruction_csv(config: dict, instruction_dir: Union[str, Path] = ".")
         "volume_buffer_solution_2",
         "degassing_time",
         "measurement_time",
+        "pre_reaction_baseline_time",
+        "post_reaction_baseline_time",
     ]
     df = pd.DataFrame([config])
     df = df[column_order]
     df.to_csv(
         os.path.join(instruction_dir, "values_for_experiment.csv"), index=False, sep=","
     )
+
+
+def degassing_check(df, chemspeed_working_dir, start=0, end=30, threshold=20):
+    # ensure that the o2 level is decaying
+    # If the value of t=0 is less than 20 yM/L bigger than t = 30 s
+    df_degas = df[df["status"] == "DEGASSING"]
+    start_o2 = df_degas["uM_1"].values[0]
+    end_o2 = df_degas["uM_1"].values[30]
+
+    status = start_o2 - end_o2 > threshold
+
+    df_status = pd.DataFrame([{"status": status}])
+    df_status.to_csv(
+        os.path.join(chemspeed_working_dir, "degassing_ok.csv"), index=False, sep=","
+    )
+
+    return status
 
 
 def main(global_config_path, experiment_config_path):
@@ -173,7 +195,7 @@ def main(global_config_path, experiment_config_path):
     seed_status_and_command_files(global_configs["instruction_dir"])
     for config in configs:
         print("🧪 Working on ", config)
-
+        degassing_checked = False
         # if the results file already exists, warn user and add incrementing number to run name
         if os.path.exists(
             os.path.join(global_configs["log_dir"], f"results_{config['name']}.csv")
@@ -215,9 +237,7 @@ def main(global_config_path, experiment_config_path):
                         "rate": rate,
                         "datetime": df["datetime"].to_list(),
                         "uM_1": df["uM_1"].to_list(),
-                        "optical_temperature_2": df[
-                            "optical_temperature_2"
-                        ].to_list(),
+                        "optical_temperature_2": df["optical_temperature_2"].to_list(),
                         "status": df["status"].to_list(),
                     }
 
@@ -300,5 +320,14 @@ def main(global_config_path, experiment_config_path):
                 ),
                 index=False,
             )
+
+            if status == Status.degassing:
+                degassing_frame = df[df["status"] == "DEGASSING"]
+                start = degassing_frame["duration"].values[0]
+                end = degassing_frame["duration"].values[-1]
+                duration = end - start
+                if duration > 30 and not degassing_checked:
+                    degassing_checked = True
+                    degassing_check(df, global_configs["chemspeed_working_dir"])
 
             time.sleep(global_configs["sleep_time"])
