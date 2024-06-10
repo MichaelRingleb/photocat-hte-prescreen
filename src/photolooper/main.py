@@ -151,6 +151,23 @@ def write_instruction_csv(config: dict, instruction_dir: Union[str, Path] = ".")
     )
 
 
+def degassing_check(df, chemspeed_working_dir, start=0, end=30, threshold=20):
+    # ensure that the o2 level is decaying
+    # If the value of t=0 is less than 20 yM/L bigger than t = 30 s
+    df_degas = df[df["status"] == "DEGASSING"]
+    start_o2 = df_degas["uM_1"].values[0]
+    end_o2 = df_degas["uM_1"].values[30]
+
+    status = start_o2 - end_o2 > threshold
+
+    df_status = pd.DataFrame([{"status": status}])
+    df_status.to_csv(
+        os.path.join(chemspeed_working_dir, "degassing_ok.csv"), index=False, sep=","
+    )
+
+    return status
+
+
 def main(global_config_path, experiment_config_path):
     global_configs = read_yaml(global_config_path)
     global_configs["chemspeed_working_dir"] = os.path.normpath(
@@ -178,7 +195,7 @@ def main(global_config_path, experiment_config_path):
     seed_status_and_command_files(global_configs["instruction_dir"])
     for config in configs:
         print("🧪 Working on ", config)
-
+        degassing_checked = False
         # if the results file already exists, warn user and add incrementing number to run name
         if os.path.exists(
             os.path.join(global_configs["log_dir"], f"results_{config['name']}.csv")
@@ -303,5 +320,14 @@ def main(global_config_path, experiment_config_path):
                 ),
                 index=False,
             )
+
+            if status == Status.degassing:
+                degassing_frame = df[df["status"] == "DEGASSING"]
+                start = degassing_frame["duration"].values[0]
+                end = degassing_frame["duration"].values[-1]
+                duration = end - start
+                if duration > 30 and not degassing_checked:
+                    degassing_checked = True
+                    degassing_check(df, global_configs["chemspeed_working_dir"])
 
             time.sleep(global_configs["sleep_time"])
