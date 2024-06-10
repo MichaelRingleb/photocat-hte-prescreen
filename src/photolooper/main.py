@@ -295,8 +295,10 @@ def main(global_config_path, experiment_config_path):
                 [Command.firesting_stop, Command.firesting_end, Command.pause]
             ):
                 fig, ax = plt.subplots(2, 1)
-                ax[0].plot(df["duration"], df["uM_1"], "-o")
-                ax[1].plot(df["duration"], df["optical_temperature_2"], "-o")
+                ax[0].scatter(df["duration"], df["uM_1"], s=0.01, marker="o")
+                ax[1].scatter(
+                    df["duration"], df["optical_temperature_2"], s=0.01, marker="o"
+                )
 
                 for switch_time in switch_times:
                     ax[0].axvline(switch_time)
