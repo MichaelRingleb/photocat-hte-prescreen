@@ -5,6 +5,12 @@ import numpy as np
 from scipy.optimize import least_squares
 
 
+def align_time(df):
+    df["duration"] = (
+        df["duration"] - df[df["status"] == "DEGASSING"]["duration"].values[0]
+    )
+
+
 def find_nearest(array, values):
     """
     Find the indices of the nearest values in the array to a list of target values.
@@ -130,31 +136,28 @@ def fit_data(data_df, filename=None):
     """Fit data to first order rate law"""
 
     # subset data to relevant statuses
-    relevant_statuses = ["DEGASSING", "PREREATION-BASELINE", "REACTION"]
-    data_subset = data_df[data_df["status"].isin(relevant_statuses)]
+    data_subset = data_df[data_df["status"].isin(["PREREACTION-BASELINE", "REACTION"])]
+    start = data_subset["duration"].values[0]
+    end = data_subset[data_subset["status"] == "REACTION"]["duration"].values[0]
+    time = data_subset["duration"].values
+    o2_data = data_subset["uM_1"].values
 
-    # get relevant time and oxygen data
-    time_data = data_subset["duration"].values
-    oxygen_data = data_subset["uM_1"].values
-
-    # get pre-reaction time range
-    reaction_start_time = data_subset[data_subset["status"] == "REACTION"][
-        "duration"
-    ].values[0]
-    pre_reaction_time_range = (data_subset["duration"].values[0], reaction_start_time)
-
-    # correct baseline
-    corrected_data = pre_signal_fitting(
-        np.c_[time_data, oxygen_data], *pre_reaction_time_range, 2, plotting=False
+    data_corrected = pre_signal_fitting(
+        np.c_[time, o2_data], start, end, 3, plotting=False
     )
 
-    # fit first order rate law
-    rate_law_guess = np.array([10.0, 0.01, reaction_start_time])
+    # guess for fitting of first order rate law (right orders of magnitude for p[0] and p[1], p[3] is equal to start time)
+    rxn_subset = data_subset[data_subset["status"] == "REACTION"]
+
+    rxn_start = find_nearest(time, rxn_subset["duration"].values[0])[0]
+    rxn_end = find_nearest(time, rxn_subset["duration"].values[-1])[0]
+
+    print(rxn_start, rxn_end)
+    print(time[rxn_start], time[rxn_end])
+
+    p_guess = np.array([o2_data[-1], 0.01, time[rxn_start] + 5])
     rate_law_fit = first_order_fitting_without_normalization(
-        rate_law_guess, corrected_data, plotting=True, filename=filename
+        p_guess, data_corrected[rxn_start:rxn_end], plotting=True
     )
-
-    # print rate constant
-    print(f"Rate constant k1 (s^-1): {rate_law_fit[1]:.3f}")
 
     return rate_law_fit[1]
