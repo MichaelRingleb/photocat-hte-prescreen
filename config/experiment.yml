@@ -1,5 +1,6 @@
 - 
   name: MRG-059-T
+  run: "true"
   voltage: 0.18
   volume_water: 5.1
   volume_buffer_base: 0.85
@@ -9,11 +10,11 @@
   volume_catalyst:  0.85
   degassing_time: 20
   measurement_time: 10 
-  run: "true" 
   pre_reaction_baseline_time: 15
   post_reaction_baseline_time: 5
 - 
   name: MRG-059-T
+  run: "true" 
   voltage: 0.18
   volume_water: 5.1
   volume_buffer_base: 0.85
@@ -23,11 +24,11 @@
   volume_catalyst:  0.85
   degassing_time: 20
   measurement_time: 10 
-  run: "true" 
   pre_reaction_baseline_time: 15
   post_reaction_baseline_time: 5
 - 
   name: MRG-059-T
+  run: "true" 
   voltage: 0.18
   volume_water: 5.1
   volume_buffer_base: 0.85
@@ -37,11 +38,11 @@
   volume_catalyst:  0.85
   degassing_time: 20
   measurement_time: 10 
-  run: "true" 
   pre_reaction_baseline_time: 15
   post_reaction_baseline_time: 5
 - 
   name: MRG-059-pause
+  run: "pause"
   voltage: 0
   volume_water: 0
   volume_buffer_base: 0
@@ -50,7 +51,6 @@
   volume_photosensitizer:  0
   volume_catalyst:  0
   degassing_time: 20
-  measurement_time: 10 
-  run: "pause" 
+  measurement_time: 10  
   pre_reaction_baseline_time: 15
   post_reaction_baseline_time: 5
