@@ -107,15 +107,17 @@ def seed_status_and_command_files(working_directory: Union[str, Path] = "."):
     # write instruction CSV with some numbers, but set the run to "false"
     config = {
         "run": "false",
-        "volume_water": 10,
-        "volume_sacrificial_oxidant": 10,
-        "volume_ruthenium_solution": 10,
-        "volume_buffer_solution_1": 10,
-        "volume_buffer_solution_2": 10,
+        "volume_water": 0,
+        "volume_sacrificial_oxidant": 0,
+        "volume_photosensitizer": 0,
+        "volume_buffer_base": 0,
+        "volume_buffer_acid": 0,
+        "volume_catalyst": 0,
         "degassing_time": 10,
         "measurement_time": 10,
-        "pre_reaction_baseline_time": 15,
-        "post_reaction_baseline_time": 5,
+        "pre_reaction_baseline_time": 10,
+        "post_reaction_baseline_time": 10,
+      
     }
 
     write_instruction_csv(config, working_directory)
@@ -142,8 +144,8 @@ def write_instruction_csv(config: dict, instruction_dir: Union[str, Path] = ".")
         "volume_water",
         "volume_sacrificial_oxidant",
         "volume_photosensitizer",
-        "volume_base",
-        "volume_acid",
+        "volume_buffer_base",
+        "volume_buffer_acid",
         "volume_catalyst",
         "degassing_time",
         "measurement_time",

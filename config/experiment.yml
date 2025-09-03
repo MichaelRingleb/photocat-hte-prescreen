@@ -2,8 +2,8 @@
   name: MRG-059-T
   voltage: 0.18
   volume_water: 5.1
-  volume_acid: 0.85
-  volume_base: 0.85
+  volume_buffer_base: 0.85
+  volume_buffer_acid: 0.85
   volume_sacrificial_oxidant: 0.85
   volume_photosensitizer:  0.85
   volume_catalyst:  0.85
@@ -16,8 +16,8 @@
   name: MRG-059-T
   voltage: 0.18
   volume_water: 5.1
-  volume_acid: 0.85
-  volume_base: 0.85
+  volume_buffer_base: 0.85
+  volume_buffer_acid: 0.85
   volume_sacrificial_oxidant: 0.85
   volume_photosensitizer:  0.85
   volume_catalyst:  0.85
@@ -30,8 +30,8 @@
   name: MRG-059-T
   voltage: 0.18
   volume_water: 5.1
-  volume_acid: 0.85
-  volume_base: 0.85
+  volume_buffer_base: 0.85
+  volume_buffer_acid: 0.85
   volume_sacrificial_oxidant: 0.85
   volume_photosensitizer:  0.85
   volume_catalyst:  0.85
@@ -44,8 +44,8 @@
   name: MRG-059-pause
   voltage: 0
   volume_water: 0
-  volume_acid: 0
-  volume_base: 0
+  volume_buffer_base: 0
+  volume_buffer_acid: 0
   volume_sacrificial_oxidant: 0
   volume_photosensitizer:  0
   volume_catalyst:  0
