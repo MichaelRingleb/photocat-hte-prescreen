@@ -3,9 +3,10 @@
   voltage: 0.18
   volume_water: 5.1
   volume_sacrificial_oxidant: 0.85
-  volume_ruthenium_solution:  0.85
-  volume_buffer_solution_1: 0.85
-  volume_buffer_solution_2: 0.85
+  volume_photosensitizer:  0.85
+  volume_base: 0.85
+  volume_acid: 0.85
+  volume_catalyst:  0.85
   degassing_time: 20
   measurement_time: 10 
   run: "true" 
